@@ -1,0 +1,19 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "super8": {
+      "results": {
+        ".read": true,
+        "$id": {
+          ".write": "$id.matches(/^m(0[1-9]|1[0-4])$/)",
+          ".validate": "newData.hasChildren(['a', 'b']) && newData.child('a').isNumber() && newData.child('b').isNumber() && newData.child('a').val() >= 0 && newData.child('b').val() >= 0 && newData.child('a').val() + newData.child('b').val() == 3",
+          "a": { ".validate": true },
+          "b": { ".validate": true },
+          "at": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    }
+  }
+}
