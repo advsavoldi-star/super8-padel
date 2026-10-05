@@ -66,7 +66,10 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,7vw,48px);lin
 .score .s{width:34px;text-align:center}
 .score .s.empty{color:var(--line)}
 .ctrl{grid-column:2 / -1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
-.opts{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.opts.grid{display:grid;gap:1px;background:var(--line);flex:0 1 auto}
+.opts.grid .opt{border-right:0;padding-inline:6px;min-width:46px}
+.fmtbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:12px}
+.opts{display:flex;flex-wrap:wrap;max-width:100%;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .opt{appearance:none;border:0;background:var(--surface);color:var(--ink);font:700 15px var(--body);padding:8px 12px;cursor:pointer;font-variant-numeric:tabular-nums;border-right:1px solid var(--line)}
 .opt:last-child{border-right:0}
 .opt[aria-pressed="true"]{background:var(--sel);color:var(--sel-ink)}
@@ -131,7 +134,7 @@ details p{max-width:65ch;margin:8px 0 0}
       <h1>Super 8 Padel</h1>
     </div>
     <div class="chips">
-      <span class="chip ball">1 quadra · 3 games</span>
+      <span class="chip ball" id="fmtChip">1 quadra · 3 games</span>
       <span class="chip">19:00–21:00</span>
       <span class="chip" id="countChip">0/14 resultados</span>
       <span class="chip" id="syncChip">Conectando…</span>
@@ -140,6 +143,12 @@ details p{max-width:65ch;margin:8px 0 0}
 
   <div class="pinbar" id="setup" hidden>
     <span><strong>Firebase não configurado.</strong> Os resultados estão sendo salvos só neste aparelho. Preencha o arquivo <code>firebase-config.js</code> (veja o README).</span>
+  </div>
+
+  <div class="fmtbar">
+    <span class="eyebrow">Games por partida</span>
+    <div class="opts" role="group" aria-label="Games por partida" id="fmtOpts"></div>
+    <span class="confirm" id="fmtConfirm"></span>
   </div>
 
   <div class="panel">
@@ -162,7 +171,7 @@ details p{max-width:65ch;margin:8px 0 0}
       </div>
       <details>
         <summary>Como funciona a probabilidade?</summary>
-        <p>O app simula 20 mil vezes as partidas que ainda faltam. Em cada simulação, cada game é decidido como cara ou coroa (50% para cada dupla), então 2×1 e 1×2 saem com mais frequência que 3×0 e 0×3. A chance é o percentual de simulações em que o jogador termina em 1º, usando o mesmo critério do ranking. Empates totais dividem a vitória.</p>
+        <p>O app simula 20 mil vezes as partidas que ainda faltam. Em cada simulação, cada game é decidido como cara ou coroa (50% para cada dupla), então placares apertados (como 2×1 ou 3×2) saem com mais frequência que placares de zero (como 3×0 ou 5×0). A chance é o percentual de simulações em que o jogador termina em 1º, usando o mesmo critério do ranking. Empates totais dividem a vitória.</p>
         <p>GG = games vencidos (critério principal). SG = games vencidos menos games perdidos. V = partidas vencidas.</p>
       </details>
     </div>
@@ -196,10 +205,13 @@ const MATCHES=[
  ["20:43",["Diogo","Seba"],["Lucas","Silvan"]],
  ["20:51",["Leonardo","Lazarotto"],["Silvan","Seba"]],
 ].map((m,i)=>({id:"m"+String(i+1).padStart(2,"0"),time:m[0],a:m[1],b:m[2]}));
-const OPTIONS=[[3,0],[2,1],[1,2],[0,3]];
+const FORMATS=[3,5,7];
+let games=3, OPTIONS=[], pendingGames=null;
+function setOptions(){OPTIONS=[];for(let a=games;a>=0;a--)OPTIONS.push([a,games-a])}
+setOptions();
 const LS="super8-padel";
 
-let results={}, ref=null;
+let results={}, ref=null, rootRef=null;
 let draft={}, editing=new Set(), confirmReset=null, busy=false;
 
 const $=id=>document.getElementById(id);
@@ -224,7 +236,7 @@ function simulate(N=20000){
   }
   for(let n=0;n<N;n++){
     const s={};PLAYERS.forEach(p=>s[p]={...base[p]});
-    for(const m of pending){let ga=0;for(let k=0;k<3;k++)if(Math.random()<.5)ga++;apply(s,m,ga,3-ga)}
+    for(const m of pending){let ga=0;for(let k=0;k<games;k++)if(Math.random()<.5)ga++;apply(s,m,ga,games-ga)}
     const c=cmp(s);let best=[PLAYERS[0]];
     for(let i=1;i<PLAYERS.length;i++){const p=PLAYERS[i],d=c(p,best[0]);if(d<0)best=[p];else if(d===0)best.push(p)}
     best.forEach(p=>wins[p]+=1/best.length);
@@ -247,7 +259,7 @@ function renderMatches(){
         <button class="btn danger small" data-resetyes="${m.id}">Sim, resetar</button>
         <button class="btn link" data-resetno="${m.id}">Cancelar</button>`;
     }else if(isEdit){
-      ctrl=`<div class="opts" role="group" aria-label="Resultado ${m.time}">${OPTIONS.map((o,i)=>`<button class="opt" id="${m.id}-o${i}" data-m="${m.id}" data-o="${i}" aria-pressed="${d===i}">${o[0]}×${o[1]}</button>`).join("")}</div>
+      ctrl=`<div class="opts grid" style="grid-template-columns:repeat(${OPTIONS.length>6?OPTIONS.length/2:OPTIONS.length},1fr)" role="group" aria-label="Resultado ${m.time}">${OPTIONS.map((o,i)=>`<button class="opt" id="${m.id}-o${i}" data-m="${m.id}" data-o="${i}" aria-pressed="${d===i}">${o[0]}×${o[1]}</button>`).join("")}</div>
         <button class="btn primary" id="${m.id}-save" data-save="${m.id}" ${d==null?"disabled":""}>Salvar</button>
         ${r?`<button class="btn link" data-cancel="${m.id}">Cancelar</button>`:""}`;
     }else{
@@ -283,16 +295,28 @@ function render(){
   $("countChip").textContent=`${n}/14 resultados`;
   $("prog").style.width=(n/14*100)+"%";
   $("resetBox").hidden=!canWrite();
-  renderMatches();renderRanking();
+  renderFormat();renderMatches();renderRanking();
+}
+function renderFormat(){
+  $("fmtChip").textContent=`1 quadra · ${games} games`;
+  $("fmtOpts").innerHTML=FORMATS.map(g=>`<button class="opt" id="fmt-${g}" data-g="${g}" aria-pressed="${g===games}">${g}</button>`).join("");
+  $("fmtConfirm").innerHTML=pendingGames?`<span>Mudar para ${pendingGames} games apaga os resultados já salvos (${Object.keys(results).length}).</span><button class="btn danger small" id="fmtYes">Sim, mudar</button><button class="btn link" id="fmtNo">Cancelar</button>`:"";
 }
 
 /* ---------- banco (Firebase Realtime Database) ---------- */
-function clean(v){const r={};for(const [k,x] of Object.entries(v||{}))if(x&&Number.isInteger(x.a)&&Number.isInteger(x.b)&&x.a+x.b===3)r[k]={a:x.a,b:x.b};return r}
+function clean(v){const r={};for(const [k,x] of Object.entries(v||{}))if(x&&Number.isInteger(x.a)&&Number.isInteger(x.b)&&x.a>=0&&x.b>=0&&x.a+x.b===games)r[k]={a:x.a,b:x.b};return r}
 function saveLocal(){try{localStorage.setItem(LS+"-results",JSON.stringify(results))}catch(e){}}
 function failMsg(e){console.error(e);toast("Não foi possível salvar: confira as regras do Firebase (README).");setSync("Erro ao salvar","err")}
 function writeResult(id,val){
   if(ref){ref.child(id).set(val?{...val,at:Date.now()}:null).catch(failMsg)}
   else{if(val)results[id]=val;else delete results[id];saveLocal();render()}
+}
+function applyGames(g){g=FORMATS.includes(g)?g:3;if(g!==games){games=g;setOptions();draft={};editing.clear();confirmReset=null}}
+function setGames(g){
+  pendingGames=null;
+  if(rootRef){const u={"config/games":g};MATCHES.forEach(m=>u["results/"+m.id]=null);rootRef.update(u).catch(failMsg)}
+  else{applyGames(g);results={};saveLocal();try{localStorage.setItem(LS+"-games",g)}catch(e){};render()}
+  toast(`Formato: ${g} games por partida`);
 }
 function writeAll(){
   if(ref){const u={};MATCHES.forEach(m=>u[m.id]=null);ref.update(u).catch(failMsg)}
@@ -301,7 +325,7 @@ function writeAll(){
 function initDb(){
   const cfg=window.FIREBASE_CONFIG;
   if(!window.firebase||!cfg||!cfg.databaseURL||/COLE_AQUI/.test(cfg.databaseURL)){
-    try{results=clean(JSON.parse(localStorage.getItem(LS+"-results")||"{}"))}catch(e){}
+    try{applyGames(+localStorage.getItem(LS+"-games"));results=clean(JSON.parse(localStorage.getItem(LS+"-results")||"{}"))}catch(e){}
     $("setup").hidden=false;setSync("Só neste aparelho","err");
     $("footNote").textContent="Modo local: configure o Firebase para compartilhar o placar entre celulares.";
     render();return;
@@ -309,8 +333,8 @@ function initDb(){
   try{
     firebase.initializeApp(cfg);
     const db=firebase.database();
-    ref=db.ref("super8/results");
-    ref.on("value",snap=>{results=clean(snap.val());render()},e=>{console.error(e);setSync("Sem permissão","err");toast("O Firebase recusou a leitura: confira as regras (README).")});
+    rootRef=db.ref("super8");ref=rootRef.child("results");
+    rootRef.on("value",snap=>{const v=snap.val()||{};applyGames(v.config&&v.config.games);results=clean(v.results);render()},e=>{console.error(e);setSync("Sem permissão","err");toast("O Firebase recusou a leitura: confira as regras (README).")});
     db.ref(".info/connected").on("value",s=>s.val()?setSync("Ao vivo","ok"):setSync("Offline · salva ao reconectar","err"));
   }catch(e){console.error(e);setSync("Erro no Firebase","err")}
 }
@@ -330,6 +354,10 @@ function resetOne(id){
 document.addEventListener("click",e=>{
   const t=e.target.closest("button");if(!t)return;
   const ds=t.dataset;
+  if(ds.g!=null){const g=+ds.g;if(g===games){pendingGames=null;renderFormat();return}
+    if(Object.keys(results).length){pendingGames=g;renderFormat()}else setGames(g);return}
+  if(t.id==="fmtYes"){setGames(pendingGames);return}
+  if(t.id==="fmtNo"){pendingGames=null;renderFormat();return}
   if(ds.o!=null){draft[ds.m]=+ds.o;renderMatches();return}
   if(ds.save){save(ds.save);return}
   if(ds.edit){const r=results[ds.edit];editing.add(ds.edit);draft[ds.edit]=OPTIONS.findIndex(o=>o[0]===r.a&&o[1]===r.b);confirmReset=null;renderMatches();return}

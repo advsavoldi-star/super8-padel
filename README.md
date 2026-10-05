@@ -1,18 +1,6 @@
-# Aplicativos Super 8 · Enjoy Padel
-
-## Super 8 completo com banco online
-
-**Acesse:** https://super8-padel-diogo.diogosavoldi2.chatgpt.site/
-
-Código completo e instruções: [completo/README.md](completo/README.md). Essa versão mantém jogadores, disputas, resultados e rankings em um banco online. Abra o mesmo link em todos os celulares. Para salvar, entre com a conta ChatGPT administradora. Jogos antigos deste aparelho podem ser importados pelo botão no aplicativo.
-
-O GitHub guarda o código; o aplicativo completo e seu banco estão hospedados no link acima. A versão rápida com Firebase que já existia neste repositório foi preservada abaixo e nos arquivos da raiz.
-
----
-
 # Super 8 Padel
 
-App de celular para controlar um Super 8 de padel: chaveamento com os 14 jogos, lançamento de resultados (Salvar, Editar, Resetar) e ranking ao vivo com chance de título.
+App de celular para controlar um Super 8 de padel: chaveamento com os 14 jogos, partidas de 3, 5 ou 7 games, lançamento de resultados (Salvar, Editar, Resetar) e ranking ao vivo com chance de título.
 
 O app fica hospedado no **GitHub Pages**. Os resultados ficam no **Firebase Realtime Database** (gratuito), então qualquer celular com o link vê e atualiza o mesmo placar na hora. Se a internet cair, o resultado é guardado no celular e enviado quando a conexão voltar.
 
@@ -52,7 +40,7 @@ O app fica hospedado no **GitHub Pages**. Os resultados ficam no **Firebase Real
 
 ## Segurança
 
-Qualquer pessoa com o link pode lançar e apagar resultados. As regras do banco só aceitam os jogos `m01` a `m14` e placares válidos (3×0, 2×1, 1×2, 0×3), e todo o resto do banco fica bloqueado. Para um Super 8 entre amigos isso costuma bastar. Se precisar restringir quem lança resultados, dá para adicionar login com Google e liberar só alguns e-mails.
+Qualquer pessoa com o link pode lançar e apagar resultados. As regras do banco só aceitam os jogos `m01` a `m14` e placares válidos (games somando 3, 5 ou 7) e o formato da partida, e todo o resto do banco fica bloqueado. Para um Super 8 entre amigos isso costuma bastar. Se precisar restringir quem lança resultados, dá para adicionar login com Google e liberar só alguns e-mails.
 
 ## Alterar jogadores ou horários
 
