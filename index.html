@@ -135,7 +135,7 @@ details p{max-width:65ch;margin:8px 0 0}
     </div>
     <div class="chips">
       <span class="chip ball" id="fmtChip">1 quadra · 3 games</span>
-      <span class="chip">19:00–21:00</span>
+      <span class="chip">18:00–20:00</span>
       <span class="chip" id="countChip">0/14 resultados</span>
       <span class="chip" id="syncChip">Conectando…</span>
     </div>
@@ -188,22 +188,22 @@ details p{max-width:65ch;margin:8px 0 0}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-const PLAYERS=["Diogo","Lazarotto","Leonardo","Lucas","Matheus","Seba","Silvan","Tuyki"];
+const PLAYERS=["Diogo","Mauri","André","Agostini","Léo","Silvan","Samuel","Guto"];
 const MATCHES=[
- ["19:00",["Tuyki","Seba"],["Diogo","Leonardo"]],
- ["19:09",["Leonardo","Seba"],["Lucas","Matheus"]],
- ["19:17",["Tuyki","Diogo"],["Matheus","Seba"]],
- ["19:26",["Diogo","Lazarotto"],["Leonardo","Matheus"]],
- ["19:34",["Lazarotto","Matheus"],["Lucas","Seba"]],
- ["19:43",["Tuyki","Lazarotto"],["Diogo","Lucas"]],
- ["19:51",["Tuyki","Leonardo"],["Lazarotto","Lucas"]],
- ["20:00",["Tuyki","Matheus"],["Leonardo","Silvan"]],
- ["20:09",["Tuyki","Lucas"],["Silvan","Matheus"]],
- ["20:17",["Diogo","Matheus"],["Lazarotto","Silvan"]],
- ["20:26",["Tuyki","Silvan"],["Lazarotto","Seba"]],
- ["20:34",["Diogo","Silvan"],["Leonardo","Lucas"]],
- ["20:43",["Diogo","Seba"],["Lucas","Silvan"]],
- ["20:51",["Leonardo","Lazarotto"],["Silvan","Seba"]],
+ ["18:00",["Diogo","Agostini"],["Mauri","Guto"]],
+ ["18:09",["André","Samuel"],["Léo","Silvan"]],
+ ["18:17",["Diogo","Silvan"],["André","Guto"]],
+ ["18:26",["Mauri","Samuel"],["Agostini","Léo"]],
+ ["18:34",["Diogo","Mauri"],["Silvan","Samuel"]],
+ ["18:43",["André","Léo"],["Agostini","Guto"]],
+ ["18:51",["Diogo","Léo"],["Agostini","Silvan"]],
+ ["19:00",["Mauri","André"],["Samuel","Guto"]],
+ ["19:09",["Diogo","Guto"],["Léo","Samuel"]],
+ ["19:17",["Mauri","Agostini"],["André","Silvan"]],
+ ["19:26",["Diogo","André"],["Mauri","Léo"]],
+ ["19:34",["Agostini","Samuel"],["Silvan","Guto"]],
+ ["19:43",["Diogo","Samuel"],["André","Agostini"]],
+ ["19:51",["Mauri","Silvan"],["Léo","Guto"]],
 ].map((m,i)=>({id:"m"+String(i+1).padStart(2,"0"),time:m[0],a:m[1],b:m[2]}));
 const FORMATS=[3,5,7];
 let games=3, OPTIONS=[], pendingGames=null;
