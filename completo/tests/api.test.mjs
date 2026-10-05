@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import fs from 'node:fs';
+import {api} from '../worker/index.js';
+import {schedule} from '../public/scheduler.js';
+const origin='https://example.chatgpt.site';
+const db=new DatabaseSync(':memory:');db.exec(fs.readFileSync('drizzle/0000_brown_the_professor.sql','utf8'));
+const env={ADMIN_EMAILS:'owner@example.test',DB:{prepare(sql){return {bind(...args){return{first:async()=>db.prepare(sql).get(...args),run:async()=>({meta:{changes:db.prepare(sql).run(...args).changes}})}},all:async()=>({results:db.prepare(sql).all()})}}}};
+const tour=()=>({id:'tournament-1',category:'Livre',modality:'Misto',players:Array.from({length:8},(_,i)=>'Jogador '+i),matches:schedule(8).map(m=>({...m,saved:false})),total:5,createdAt:new Date().toISOString()});
+const put=(t,email='owner@example.test',reqOrigin=origin)=>api(new Request(origin+'/api/tournaments/'+t.id,{method:'PUT',headers:{'Content-Type':'application/json',Origin:reqOrigin,'oai-authenticated-user-id':'test-user','oai-authenticated-user-email':email},body:JSON.stringify(t)}),env);
+test('shared persistence, authorization and stale updates',async()=>{
+ assert.equal((await put(tour(),'visitor@example.test')).status,403);
+ assert.equal((await put(tour(),'owner@example.test','https://evil.test')).status,403);
+ let response=await put(tour());assert.equal(response.status,200);const one=await response.json();assert.equal(one.revision,1);
+ const read=await api(new Request(origin+'/api/tournaments'),env);const listed=await read.json();assert.equal(listed.items.length,1);assert.equal(listed.items[0].id,one.id);
+ assert.equal((await put(tour())).status,409);
+ const changed=structuredClone(one);changed.matches[0]={...changed.matches[0],scoreA:'3',scoreB:'2',saved:true};
+ response=await put(changed);assert.equal(response.status,200);assert.equal((await response.json()).revision,2);
+ assert.equal((await put(one)).status,409);
+ const saved=await (await api(new Request(origin+'/api/tournaments/'+one.id),env)).json();assert.equal(saved.matches[0].scoreA,'3');
+ const invalid=structuredClone(saved);invalid.matches[0].scoreB='9';assert.equal((await put(invalid)).status,400);
+ const invalidNull=structuredClone(saved);invalidNull.matches[0].scoreA=null;invalidNull.matches[0].scoreB='5';assert.equal((await put(invalidNull)).status,400);
+});

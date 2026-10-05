@@ -1,3 +1,15 @@
+# Aplicativos Super 8 · Enjoy Padel
+
+## Super 8 completo com banco online
+
+**Acesse:** https://super8-padel-diogo.diogosavoldi2.chatgpt.site/
+
+Código completo e instruções: [completo/README.md](completo/README.md). Essa versão mantém jogadores, disputas, resultados e rankings em um banco online. Abra o mesmo link em todos os celulares. Para salvar, entre com a conta ChatGPT administradora. Jogos antigos deste aparelho podem ser importados pelo botão no aplicativo.
+
+O GitHub guarda o código; o aplicativo completo e seu banco estão hospedados no link acima. A versão rápida com Firebase que já existia neste repositório foi preservada abaixo e nos arquivos da raiz.
+
+---
+
 # Super 8 Padel
 
 App de celular para controlar um Super 8 de padel: chaveamento com os 14 jogos, lançamento de resultados (Salvar, Editar, Resetar) e ranking ao vivo com chance de título.
